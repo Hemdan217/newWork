@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+
+    font-family: 'Raloud' !important;
+ 
+  }
+
+@font-face {
+    font-family: 'Raloud';
+    src: url('./fonts/euclid-bold.woff2');
+    font-weight: 700;
+  }
+  
+  @font-face {
+    font-family: 'Raloud';
+    src: url('./fonts/euclid-semibold.woff2');
+    font-weight: 600;
+  }
+  
+  @font-face {
+    font-family: 'Raloud';
+    src: url('./fonts/euclid-regular.woff2');
+    font-weight: 400;
+  }
+  
+  @font-face {
+    font-family: 'Raloud';
+    src: url('./fonts/euclid-light.woff2');
+    font-weight: 300;
+  }
+  
