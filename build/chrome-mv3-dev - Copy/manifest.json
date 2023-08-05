@@ -1,0 +1,40 @@
+{
+  "icons": {
+    "16": "icon16.plasmo.9f44d99c.png",
+    "32": "icon32.plasmo.83dbbbab.png",
+    "48": "icon48.plasmo.a78c509e.png",
+    "64": "icon64.plasmo.15206795.png",
+    "128": "icon128.plasmo.c11f39af.png"
+  },
+  "manifest_version": 3,
+  "action": {
+    "default_icon": {
+      "16": "icon16.plasmo.9f44d99c.png",
+      "32": "icon32.plasmo.83dbbbab.png",
+      "48": "icon48.plasmo.a78c509e.png",
+      "64": "icon64.plasmo.15206795.png",
+      "128": "icon128.plasmo.c11f39af.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "version": "0.0.1",
+  "name": "DEV | Check URL",
+  "description": "A basic Demo extension.",
+  "background": { "service_worker": "static/background/index.js" },
+  "permissions": [
+    "storage",
+    "tabs",
+    "bookmarks",
+    "background",
+    "runtime",
+    "identity",
+    "scripting",
+    "*"
+  ],
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["content.672cac6b.js"], "css": [] }
+  ],
+  "web_accessible_resources": ["assets/*", "assets/*/*"],
+  "host_permissions": ["*"],
+  "content_security_policy": "script-src 'self'; object-src 'self';"
+}

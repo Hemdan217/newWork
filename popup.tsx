@@ -18,44 +18,57 @@ function IndexPopup() {
   const [enterEmailInd, setEnterEmailInd] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      const jwtString = Buffer.from(token, "base64").toString();
-      const regex = /"exp":\s*(\d+)/;
-      const match = jwtString.match(regex);
+    // if (token) {
+    //   const jwtString = Buffer.from(token, "base64").toString();
+    //   const regex = /"exp":\s*(\d+)/;
+    //   const match = jwtString.match(regex);
 
-      if (match) {
-        const exp = parseInt(match[1]);
-        console.log(exp);
-        console.log(`Expiration time: ${new Date(exp * 1000)}`);
-        if (Date.now() / 1000 < exp) {
-          setAuth(true);
-        } else {
-          axios
-            .post("http://178.170.48.29:5000/authenticate", {
-              clientId: "YjY1YTFiODQtMjVlOC00N2FmLWFmMWYtZjUxZjA0MjMwZjYx",
-              key: "ZjgxZTc3OTktN2MyNy00ZjEyLWFkNzQtNDVjNzc0OTQxN2I1",
-            })
-            .then((res) => {
-              console.log(res.data);
-              console.log(res.data);
-              setToken(res.data.access_token);
-              setAuth(true);
-              start(res.data.access_token);
-            });
-        }
-      }
-    }
+    //   if (match) {
+    //     const exp = parseInt(match[1]);
+    //     console.log(exp);
+    //     console.log(`Expiration time: ${new Date(exp * 1000)}`);
+    //     if (Date.now() / 1000 < exp) {
+    //       setAuth(true);
+    //     } else {
+    axios
+      .post("http://178.170.48.29:5000/authenticate", {
+        clientId: "YjY1YTFiODQtMjVlOC00N2FmLWFmMWYtZjUxZjA0MjMwZjYx",
+        key: "ZjgxZTc3OTktN2MyNy00ZjEyLWFkNzQtNDVjNzc0OTQxN2I1",
+      })
+      .then((res) => {
+        console.log(res.data);
+        console.log(res.data);
+        setToken(res.data.access_token);
+        setAuth(true);
+        start(res.data.access_token);
+      });
+    //   }
+    // } else {
+    //   axios
+    //     .post("http://178.170.48.29:5000/authenticate", {
+    //       clientId: "YjY1YTFiODQtMjVlOC00N2FmLWFmMWYtZjUxZjA0MjMwZjYx",
+    //       key: "ZjgxZTc3OTktN2MyNy00ZjEyLWFkNzQtNDVjNzc0OTQxN2I1",
+    //     })
+    //     .then((res) => {
+    //       console.log(res.data);
+    //       console.log(res.data);
+    //       setToken(res.data.access_token);
+    //       setAuth(true);
+    //       start(res.data.access_token);
+    //     });
+    // }
+    // }
   }, []);
-  useEffect(() => {
-    if (auth) {
-      start(token);
-    }
-  }, [auth]);
+  // useEffect(() => {
+  //   if (auth) {
+  //     start(token);
+  //   }
+  // }, [auth]);
 
-  async function start(toekn) {
+  async function start(token) {
     await chrome.runtime.sendMessage({
       action: "start",
-      payload: `Bearer ${token}`,
+      payload: token,
     });
   }
 

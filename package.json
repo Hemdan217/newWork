@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
+    "firefox": "plasmo build --target=firefox-mv3",
+    "firefox2": "plasmo build  -- --zip --target=firefox-mv3 ",
     "package": "plasmo package"
   },
   "dependencies": {
@@ -41,7 +43,8 @@
     "web_accessible_resources": [
       {
         "resources": [
-          "assets/*"
+          "assets/*",
+          "assets/*/*"
         ],
         "matches": [
           "https://www.plasmo.com/*"

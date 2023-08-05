@@ -1,0 +1,29 @@
+{
+  "icons": {
+    "16": "icon16.plasmo.fec8a033.png",
+    "32": "icon32.plasmo.0de12095.png",
+    "48": "icon48.plasmo.ee7f69a7.png",
+    "64": "icon64.plasmo.65c614d4.png",
+    "128": "icon128.plasmo.7e022d80.png"
+  },
+  "manifest_version": 2,
+  "browser_action": {
+    "default_icon": {
+      "16": "icon16.plasmo.fec8a033.png",
+      "32": "icon32.plasmo.0de12095.png",
+      "48": "icon48.plasmo.ee7f69a7.png",
+      "64": "icon64.plasmo.65c614d4.png",
+      "128": "icon128.plasmo.7e022d80.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "version": "0.0.1",
+  "name": "Check URL",
+  "description": "A basic Demo extension.",
+  "background": { "scripts": ["static/background/index.js"] },
+  "permissions": ["storage"],
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["content.bb14809f.js"], "css": [] }
+  ],
+  "web_accessible_resources": ["assets/*", "assets/*/*"]
+}

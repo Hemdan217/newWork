@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: token,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         url: request.payload,
@@ -45,11 +45,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     } else {
       await chrome.action.setIcon({
         path: {
-          16: "./../../icon16.plasmo.9f44d99c.png",
-          32: "./../../icon32.plasmo.83dbbbab.png",
-          48: "./../../icon48.plasmo.a78c509e.png",
-          64: "./../../icon64.plasmo.15206795.png",
-          128: "./../../icon128.plasmo.c11f39af.pnp",
+          16: "./../../assets/no/icon16.plasmo.2577fc03.png",
+          32: "./../../assets/no/icon32.plasmo.d583dc1e.png",
+          48: "./../../assets/no/icon48.plasmo.e0fcfb1d.png",
+          64: "./../../assets/no/icon64.plasmo.e6259081.png",
+          128: "./../../assets/no/icon128.plasmo.96a1ede9.png",
         },
       });
     }
