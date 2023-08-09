@@ -1,5 +1,5 @@
-import { Storage } from "@plasmohq/storage";
-import { useStorage } from "@plasmohq/storage/hook";
+// import { Storage } from "@plasmohq/storage";
+// import { useStorage } from "@plasmohq/storage/hook";
 import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import "style.css";
@@ -7,10 +7,10 @@ import "./node_modules/bootstrap/dist/css/bootstrap.min.css";
 import logo from "data-base64:~assets/icon.png";
 
 function IndexPopup() {
-  const storage = new Storage();
+  // const storage = new Storage();
 
-  const [token, setToken] = useStorage("token");
-  const [auth, setAuth] = useStorage("auth");
+  const [token, setToken] = useState();
+  const [auth, setAuth] = useState();
   const clientId = useRef(null);
   const key = useRef(null);
   const [main, setMain] = useState("org");

@@ -21,7 +21,7 @@
     "bootstrap": "^5.3.1",
     "googleapis": "^120.0.0",
     "https-proxy-agent": "^7.0.1",
-    "plasmo": "^0.80.0",
+    "plasmo": "^0.82.0",
     "react": "18.2.0",
     "react-bootstrap": "^2.8.0",
     "react-dom": "18.2.0",
@@ -52,7 +52,7 @@
       }
     ],
     "host_permissions": [
-      "*"
+      "<all_urls>"
     ],
     "background": {
       "script": "background.js",
@@ -63,10 +63,14 @@
       "bookmarks",
       "background",
       "storage",
-      "runtime",
       "identity",
+      "tabs",
       "scripting",
-      "*"
+      "webNavigation",
+      "declarativeNetRequest",
+      "declarativeNetRequestFeedback",
+      "webRequest",
+      "<all_urls>"
     ],
     "content_security_policy": {
       "extension_pages": "script-src 'self'; object-src 'self';",
