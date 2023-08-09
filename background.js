@@ -41,13 +41,14 @@ chrome.runtime.onMessage.addListener(async function (
   }
 });
 
-let predicted = false;
+let isOnBeforeNavigateCalled = false;
+let isOnBeforeRequestCalled = false;
 
 async function checkURL(details) {
   if (
     details.type === "main_frame" &&
     details.frameId === 0 &&
-    !predicted &&
+    !isOnBeforeNavigateCalled &&
     !(
       details.url.includes("chrome-extension:") ||
       details.url.includes("chrome:")
@@ -57,6 +58,7 @@ async function checkURL(details) {
     const prediction = await predict(url, details.tabId);
     console.log(url, "onBeforeRequest");
     console.log(prediction, "prediction");
+    isOnBeforeRequestCalled = true;
     changeIcon(prediction, details.tabId);
     return { cancel: prediction === "MALICIOUS" };
   }
@@ -87,7 +89,7 @@ function blockRequests(details) {
 chrome.webNavigation.onBeforeNavigate.addListener(async function (details) {
   if (
     details.frameId === 0 &&
-    !predicted &&
+    !isOnBeforeRequestCalled &&
     !(
       details.url.includes("chrome-extension:") ||
       details.url.includes("chrome:")
@@ -97,6 +99,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(async function (details) {
     const prediction = await predict(url, details.tabId);
     console.log(url, "onBeforeNavigate");
     console.log(prediction, "prediction");
+    isOnBeforeNavigateCalled = true;
     changeIcon(prediction, details.tabId);
     if (prediction === "MALICIOUS") {
       return { cancel: true };
@@ -105,7 +108,6 @@ chrome.webNavigation.onBeforeNavigate.addListener(async function (details) {
 });
 
 async function predict(url, currentTab) {
-  predicted != predicted;
   try {
     const res = await fetch("http://178.170.48.29:5000/prediction", {
       method: "POST",
@@ -120,14 +122,12 @@ async function predict(url, currentTab) {
     const data = await res.json();
     const prediction = data?.predict;
     if (prediction === "NORMAL") {
-      chrome.webRequest.onBeforeRequest.removeListener(blockRequests);
       chrome.webRequest.onBeforeRequest.addListener(
         allowRequests,
         { urls: ["<all_urls>"], types: ["main_frame"], tabId: currentTab },
         ["blocking"]
       );
     } else if (prediction === "MALICIOUS") {
-      chrome.webRequest.onBeforeRequest.removeListener(allowRequests);
       chrome.webRequest.onBeforeRequest.addListener(
         blockRequests,
         { urls: ["<all_urls>"], types: ["main_frame"], tabId: currentTab },
@@ -141,7 +141,10 @@ async function predict(url, currentTab) {
   }
 }
 function changeIcon(prediction, currentTab) {
+  isOnBeforeNavigateCalled = false;
+  isOnBeforeRequestCalled = false;
   if (prediction === "NORMAL") {
+    chrome.webRequest.onBeforeRequest.removeListener(blockRequests);
     chrome.browserAction.setIcon({
       tabId: currentTab,
       path: {
@@ -153,6 +156,7 @@ function changeIcon(prediction, currentTab) {
       },
     });
   } else if (prediction === "MALICIOUS") {
+    chrome.webRequest.onBeforeRequest.removeListener(allowRequests);
     chrome.browserAction.setIcon({
       tabId: currentTab,
       path: {
