@@ -6,28 +6,28 @@
 //   });
 //   console.log("HIDhidhdj");
 // });
-// document.querySelectorAll("a").forEach((link) => {
-//   link.addEventListener("click", (event) => {
-//     event.preventDefault();
-//     chrome.runtime.sendMessage(
-//       {
-//         action: "checkThisUrl",
-//         payload: link.href,
-//       },
-//       (res) => {
-//         console.log(res);
-//         if (res?.predict === "NORMAL") {
-//           link.style.padding = "2px";
-//           link.style.backgroundColor = "green";
-//           location.href = link.href;
-//         } else if (res?.predict === "MALICIOUS") {
-//           link.style.backgroundColor = "red";
-//           createNewDiv();
-//         }
-//       }
-//     );
-//   });
-// });
+document.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    chrome.runtime.sendMessage(
+      {
+        action: "checkThisUrl",
+        payload: link.href,
+      },
+      (res) => {
+        console.log(res);
+        if (res?.predict === "NORMAL") {
+          link.style.padding = "2px";
+          link.style.backgroundColor = "green";
+          location.href = link.href;
+        } else if (res?.predict === "MALICIOUS") {
+          link.style.backgroundColor = "red";
+          createNewDiv();
+        }
+      }
+    );
+  });
+});
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   // Log the URL details

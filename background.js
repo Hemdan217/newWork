@@ -41,14 +41,12 @@ chrome.runtime.onMessage.addListener(async function (
   }
 });
 
-let isOnBeforeNavigateCalled = false;
-let isOnBeforeRequestCalled = false;
-
+let blockAllRequests = false;
+let tabId;
 async function checkURL(details) {
   if (
     details.type === "main_frame" &&
     details.frameId === 0 &&
-    !isOnBeforeNavigateCalled &&
     !(
       details.url.includes("chrome-extension:") ||
       details.url.includes("chrome:")
@@ -58,56 +56,47 @@ async function checkURL(details) {
     const prediction = await predict(url, details.tabId);
     console.log(url, "onBeforeRequest");
     console.log(prediction, "prediction");
-    isOnBeforeRequestCalled = true;
     changeIcon(prediction, details.tabId);
-    return { cancel: prediction === "MALICIOUS" };
+    return { cancel: blockAllRequests };
   }
+  return { cancel: blockAllRequests };
 }
-
-chrome.webRequest.onBeforeRequest.addListener(
-  checkURL,
-  { urls: ["<all_urls>"], types: ["main_frame"] },
-  ["blocking"]
-);
 
 function allowRequests(details) {
   return { cancel: false };
 }
 
 function blockRequests(details) {
+  console.log(blockAllRequests);
   if (
     details.url === "http://178.170.48.29:5000/prediction" ||
-    details.url.includes("chrome-extension:") ||
-    details.url.includes("chrome:")
+    details.url.includes("chrome-extension:")
   ) {
     return { cancel: false };
   } else {
-    return { cancel: true };
+    return { cancel: blockAllRequests };
   }
 }
 
 chrome.webNavigation.onBeforeNavigate.addListener(async function (details) {
   if (
     details.frameId === 0 &&
-    !isOnBeforeRequestCalled &&
     !(
       details.url.includes("chrome-extension:") ||
       details.url.includes("chrome:")
     )
   ) {
-    const url = details.url;
-    const prediction = await predict(url, details.tabId);
-    console.log(url, "onBeforeNavigate");
-    console.log(prediction, "prediction");
-    isOnBeforeNavigateCalled = true;
-    changeIcon(prediction, details.tabId);
-    if (prediction === "MALICIOUS") {
-      return { cancel: true };
-    }
+    chrome.webRequest.onBeforeRequest.addListener(
+      checkURL,
+      { urls: ["<all_urls>"], types: ["main_frame"], tabId: details.id },
+      ["blocking"]
+    );
   }
 });
 
 async function predict(url, currentTab) {
+  tabId = currentTab;
+  chrome.webRequest.onBeforeRequest.removeListener(blockRequests, { tabId });
   try {
     const res = await fetch("http://178.170.48.29:5000/prediction", {
       method: "POST",
@@ -122,18 +111,15 @@ async function predict(url, currentTab) {
     const data = await res.json();
     const prediction = data?.predict;
     if (prediction === "NORMAL") {
-      chrome.webRequest.onBeforeRequest.addListener(
-        allowRequests,
-        { urls: ["<all_urls>"], types: ["main_frame"], tabId: currentTab },
-        ["blocking"]
-      );
+      blockAllRequests = false;
     } else if (prediction === "MALICIOUS") {
-      chrome.webRequest.onBeforeRequest.addListener(
-        blockRequests,
-        { urls: ["<all_urls>"], types: ["main_frame"], tabId: currentTab },
-        ["blocking"]
-      );
+      blockAllRequests = true;
     }
+    chrome.webRequest.onBeforeRequest.addListener(
+      blockRequests,
+      { urls: ["<all_urls>"], tabId },
+      ["blocking"]
+    );
     return prediction;
   } catch (error) {
     console.error(error);
@@ -141,10 +127,7 @@ async function predict(url, currentTab) {
   }
 }
 function changeIcon(prediction, currentTab) {
-  isOnBeforeNavigateCalled = false;
-  isOnBeforeRequestCalled = false;
   if (prediction === "NORMAL") {
-    chrome.webRequest.onBeforeRequest.removeListener(blockRequests);
     chrome.browserAction.setIcon({
       tabId: currentTab,
       path: {
@@ -156,7 +139,6 @@ function changeIcon(prediction, currentTab) {
       },
     });
   } else if (prediction === "MALICIOUS") {
-    chrome.webRequest.onBeforeRequest.removeListener(allowRequests);
     chrome.browserAction.setIcon({
       tabId: currentTab,
       path: {
@@ -179,6 +161,7 @@ function changeIcon(prediction, currentTab) {
       },
     });
   }
+
   chrome.tabs.sendMessage(currentTab, { prediction });
 }
 
