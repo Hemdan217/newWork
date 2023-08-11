@@ -1,1 +1,48 @@
-{"icons":{"16":"icon16.plasmo.6c567d50.png","32":"icon32.plasmo.76b92899.png","48":"icon48.plasmo.aced7582.png","64":"icon64.plasmo.8bb5e6e0.png","128":"icon128.plasmo.3c1ed2d2.png"},"manifest_version":3,"action":{"default_icon":{"16":"icon16.plasmo.6c567d50.png","32":"icon32.plasmo.76b92899.png","48":"icon48.plasmo.aced7582.png","64":"icon64.plasmo.8bb5e6e0.png","128":"icon128.plasmo.3c1ed2d2.png"},"default_popup":"popup.html"},"version":"0.0.1","name":"Check URL","description":"A basic Demo extension.","background":{"service_worker":"static/background/index.js"},"permissions":["storage","tabs","bookmarks","background","identity","scripting","webNavigation","declarativeNetRequest","declarativeNetRequestFeedback","webRequest","<all_urls>"],"content_scripts":[{"matches":["<all_urls>"],"js":["content.06af5f40.js"],"css":[]}],"web_accessible_resources":[{"resources":["assets/*","assets/*/*"],"matches":["https://www.plasmo.com/*"]}],"host_permissions":["<all_urls>"],"content_security_policy":{"extension_pages":"script-src 'self'; object-src 'self';","sandbox":"sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"}}
+{
+  "icons": {
+    "16": "assets/no/icon16.plasmo.2577fc03.png",
+    "32": "assets/no/icon32.plasmo.d583dc1e.png",
+    "48": "assets/no/icon48.plasmo.e0fcfb1d.png",
+    "64": "assets/no/icon64.plasmo.e6259081.png",
+    "128": "assets/no/icon128.plasmo.96a1ede9.png"
+  },
+  "manifest_version": 2,
+  "background": {
+    "scripts": ["static/background/index.js"]
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "assets/no/icon16.plasmo.2577fc03.png",
+      "32": "assets/no/icon32.plasmo.d583dc1e.png",
+      "48": "assets/no/icon48.plasmo.e0fcfb1d.png",
+      "64": "assets/no/icon64.plasmo.e6259081.png",
+      "128": "assets/no/icon128.plasmo.96a1ede9.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.06af5f40.js"],
+      "css": []
+    }
+  ],
+  "description": "A basic Demo extension.",
+  "name": "Check URL",
+  "permissions": [
+    "storage",
+    "tabs",
+    "bookmarks",
+    "background",
+    "webNavigation",
+    "identity",
+
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
+  "version": "0.0.1",
+  "web_accessible_resources": ["assets/*", "assets/*/*"],
+
+  "content_security_policy": "script-src 'self'; object-src 'self';"
+}

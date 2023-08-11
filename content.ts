@@ -1,60 +1,65 @@
-// document.addEventListener("DOMContentLoaded", () => {
-//   document.querySelectorAll("a").forEach((link) => {
-//     link.addEventListener("click", (event) => {
-//       event.preventDefault();
-//     });
-//   });
-//   console.log("HIDhidhdj");
-// });
-document.querySelectorAll("a").forEach((link) => {
-  link.addEventListener("click", (event) => {
-    event.preventDefault();
-    chrome.runtime.sendMessage(
-      {
-        action: "checkThisUrl",
-        payload: link.href,
-      },
-      (res) => {
-        console.log(res);
-        if (res?.predict === "NORMAL") {
-          link.style.padding = "2px";
-          link.style.backgroundColor = "green";
-          location.href = link.href;
-        } else if (res?.predict === "MALICIOUS") {
-          link.style.backgroundColor = "red";
-          createNewDiv();
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      chrome.runtime.sendMessage(
+        {
+          action: "checkThisUrl",
+          payload: link.href,
+        },
+        async (res) => {
+          console.log(res);
+          if (res?.predict == "NORMAL") {
+            link.style.padding = "2px";
+            // link.style.backgroundColor = "green";
+            location.href = link.href;
+          } else if (res?.predict == "MALICIOUS") {
+            // link.style.backgroundColor = "red";
+            createNewDiv();
+          }
+          await chrome.runtime.sendMessage({
+            action: "changeIconCurrent",
+
+            prediction: res?.predict,
+          });
         }
-      }
-    );
+      );
+    });
   });
 });
+
 // Listen for messages from the background script
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  // Log the URL details
-  // console.log("URL:", request.url);
-  // Store the current URL
-  console.log("prediction:", request.prediction);
-  if (request.prediction === "MALICIOUS") {
-    createNewDiv();
+chrome.runtime.onMessage.addListener(async function (
+  request,
+  sender,
+  sendResponse
+) {
+  if (request.prediction == "MALICIOUS") {
+    setTimeout(() => {
+      createNewDiv();
+    }, 350);
   }
+  await chrome.runtime.sendMessage({
+    action: "changeIcon",
+    id: request.id,
+    prediction: request.prediction,
+  });
 });
-console.log("HIDhidhdj");
+
 function createNewDiv() {
-  let div = document.createElement("div");
+  var div = document.createElement("div");
   div.style.backgroundColor = "red";
   div.style.padding = "20px";
-  div.style.position = "fixed"; // Update position to fixed
-  div.style.top = "0"; // Add top position to 0
-  div.style.margin = "auto"; // Add top position to 0
-  div.style.direction = "ltr"; // Add top position to 0
-  div.style.zIndex = "1000"; // Add top position to 0
-  div.style.width = "100%"; // Set the width to 100% to cover the entire page
-  div.style.color = "white"; // Set the width to 100% to cover the entire page
-  div.style.textAlign = "center"; // Set the width to 100% to cover the entire page
-  div.style.fontWeight = "bold"; // Set the width to 100% to cover the entire page
-  div.innerHTML = `
-  WARNING - Potential Malicious page!
-`;
+  div.style.position = "fixed";
+  div.style.top = "0";
+  div.style.margin = "auto";
+  div.style.direction = "ltr";
+  div.style.zIndex = "1000";
+  div.style.width = "100%";
+  div.style.color = "white";
+  div.style.textAlign = "center";
+  div.style.fontWeight = "bold";
+  div.innerHTML = "WARNING - Potential Malicious page!";
 
   document.body.appendChild(div);
 }
