@@ -45,7 +45,5 @@
     "https://*/*"
   ],
   "version": "0.0.1",
-  "web_accessible_resources": ["assets/*", "assets/*/*"],
-
-  "content_security_policy": "script-src 'self'; object-src 'self';"
+  "web_accessible_resources": ["assets/*", "assets/*/*"]
 }
