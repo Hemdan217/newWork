@@ -29,22 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Create the spinner element
-const spinner = document.createElement("div");
 
-// Apply CSS styles to the spinner
-spinner.style.position = "fixed";
-spinner.style.top = "50%";
-spinner.style.left = "50%";
-spinner.style.transform = "translate(-50%, -50%)";
-spinner.style.width = "40px";
-spinner.style.height = "40px";
-spinner.style.borderRadius = "50%";
-spinner.style.border = "4px solid #f3f3f3";
-spinner.style.borderTop = "4px solid #3498db";
-spinner.style.animation = "spin 2s linear infinite";
-
-// Add the spinner to the document body
-document.body.appendChild(spinner);
 chrome.runtime.sendMessage(
   {
     action: "checkThisUrl2",
@@ -53,18 +38,19 @@ chrome.runtime.sendMessage(
   async (res) => {
     console.log(res);
     if (res?.predict == "NORMAL") {
-      spinner.remove();
     } else if (res?.predict == "MALICIOUS") {
       window.stop();
 
       // link.style.backgroundColor = "red";
       createNewDiv();
     }
-    await chrome.runtime.sendMessage({
-      action: "changeIconCurrent",
+    if (!document.baseURI.includes("index.html?checkUrl=")) {
+      await chrome.runtime.sendMessage({
+        action: "changeIconCurrent",
 
-      prediction: res?.predict,
-    });
+        prediction: res?.predict,
+      });
+    }
   }
 );
 
@@ -75,7 +61,6 @@ chrome.runtime.onMessage.addListener(async function (
   sendResponse
 ) {
   if (request.prediction == "NORMAL") {
-    window.location.reload();
   } else if (request.prediction == "MALICIOUS") {
     setTimeout(() => {
       createNewDiv();

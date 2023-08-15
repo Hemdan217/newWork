@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XGUARD</title>
+
+  <link rel="stylesheet" href="./assets/bootstrap.min.css">
+  <style>
+    div.spinner {
+      width: 100px;
+      height: 100px;
+      margin: 30px auto;
+      border-radius: 50%;
+      border: 10px solid #F11958;
+      border-bottom: 10px solid transparent;
+      position: relative;
+      animation: spinner 1s ease-in infinite;
+      animation-play-state: running;
+    }
+
+
+
+    div.spinner::after {
+      position: absolute;
+      content: '';
+      width: 130px;
+      height: 130px;
+      /* transform: translate(-25px, -55px);*/
+      left: -25px;
+      top: -55PX;
+      margin: 30px auto;
+      border-radius: 50%;
+      border: 10px solid #1C90FE;
+      animation: spinner 1s ease-in infinite .3s;
+      animation-play-state: running;
+      border-bottom: 10px solid transparent;
+
+    }
+
+
+    @keyframes spinner {
+      0% {
+        transform: rotate(0turn)
+      }
+
+      20% {
+        transform: rotate(.4turn)
+      }
+
+      100% {
+        transform: rotate(1turn)
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="text-center">
+      <img src="./assets/icon.png" class="img-responsive  m-auto pt-5" />
+
+    </div>
+    <div class="spinner pt-5">
+
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (optional) -->
+  <script src="./assets/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

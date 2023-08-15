@@ -119,15 +119,25 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
     !(
       details.url.includes("chrome-extension:") ||
       details.url.includes("chrome:") ||
-      details.url == "https://google.com/" ||
-      originalUrl == details.url
+      details.url.includes("index.html?checkUrl=")
     )
   ) {
-    originalUrl = details.url;
-    tabId = details.tabId;
-    if (blockedUrls.includes(originalUrl)) {
-      chrome.tabs.update(details.tabId, { url: "https://google.com/" });
+    if (
+      originalUrl !== details.url &&
+      !details.url.includes("index.html?checkUrl=")
+    ) {
+      originalUrl = details.url;
+      tabId = details.tabId;
+
+      chrome.tabs.update(details.tabId, {
+        url: `https:chrome-extension/${chrome.runtime.id}/index.htm?checkUrl=${originalUrl}`,
+      });
     }
+  } else if (
+    details.frameId == 0 &&
+    details.url.includes("index.html?checkUrl=")
+  ) {
+    let checkingURl = details.url.split("=")[1];
     fetch("http://178.170.48.29:5000/prediction", {
       method: "POST",
       headers: {
@@ -135,7 +145,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
         Authorization: "Bearer " + token,
       },
       body: JSON.stringify({
-        url: originalUrl,
+        url: checkingURl,
       }),
     })
       .then((response) => {
@@ -148,10 +158,15 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
               id: details.tabId,
             });
             if (data?.predict == "NORMAL") {
+              chrome.tabs.update(details.tabId, {
+                url: `${checkingURl}`,
+              });
               changeIcon(data?.predict, details.tabId);
             } else if (data?.predict == "MALICIOUS") {
-              blockedUrls.push(originalUrl);
-              chrome.tabs.update(details.tabId, { url: "https://google.com/" });
+              chrome.tabs.sendMessage(details.tabId, {
+                prediction: data?.predict,
+                id: details.tabId,
+              });
             }
           });
         } else {
@@ -186,7 +201,7 @@ function handleBeforeRequest(details) {
     return { cancel: false }; // Continue with the request
   } else {
     // Delay the request by 3 seconds
-    var delayInMilliseconds = 1000; // 3 seconds
+    var delayInMilliseconds = 500; // 3 seconds
     var startTime = new Date().getTime();
     var endTime = startTime + delayInMilliseconds;
 
@@ -222,7 +237,7 @@ function blockRequests(details) {
     return { cancel: false }; // Continue with the request
   } else {
     // Delay the request by 3 seconds
-    var delayInMilliseconds = 1000; // 3 seconds
+    var delayInMilliseconds = 500; // 3 seconds
     var startTime = new Date().getTime();
     var endTime = startTime + delayInMilliseconds;
 
