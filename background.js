@@ -118,26 +118,28 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
     details.frameId == 0 &&
     !(
       details.url.includes("chrome-extension:") ||
-      details.url.includes("chrome:") ||
-      details.url.includes("index.html?checkUrl=")
+      details.url.includes("chrome:")
     )
   ) {
-    if (
-      originalUrl !== details.url &&
-      !details.url.includes("index.html?checkUrl=")
-    ) {
+    if (details.url.includes("?checked")) {
+      const redirectUrl = details.url.replace(/\?checked\b/, "");
+      return { redirectUrl };
+    } else {
       originalUrl = details.url;
       tabId = details.tabId;
 
       chrome.tabs.update(details.tabId, {
-        url: `https:chrome-extension/${chrome.runtime.id}/index.htm?checkUrl=${originalUrl}`,
+        url: `index.html`,
       });
     }
-  } else if (
-    details.frameId == 0 &&
-    details.url.includes("index.html?checkUrl=")
+  }
+});
+
+function handleBeforeRequest(details) {
+  console.log(details.url);
+  if (
+    details.url.includes(`chrome-extension://${chrome.runtime.id}/index.html`)
   ) {
-    let checkingURl = details.url.split("=")[1];
     fetch("http://178.170.48.29:5000/prediction", {
       method: "POST",
       headers: {
@@ -145,7 +147,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
         Authorization: "Bearer " + token,
       },
       body: JSON.stringify({
-        url: checkingURl,
+        url: originalUrl,
       }),
     })
       .then((response) => {
@@ -159,7 +161,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
             });
             if (data?.predict == "NORMAL") {
               chrome.tabs.update(details.tabId, {
-                url: `${checkingURl}`,
+                url: `${originalUrl}?checked`,
               });
               changeIcon(data?.predict, details.tabId);
             } else if (data?.predict == "MALICIOUS") {
@@ -178,18 +180,10 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
         // Cancel the navigation
         chrome.tabs.update(details.tabId, { url: "error.html" });
       });
+  } else if (details.url.includes("?checked")) {
+    const redirectUrl = details.url.replace(/\?checked\b/, "");
+    return { redirectUrl };
   } else if (
-    details.frameId == 0 &&
-    (details.url.includes("chrome-extension:") ||
-      details.url.includes("chrome:") ||
-      details.url == "https://google.com/")
-  ) {
-    originalUrl = details.url;
-  }
-});
-
-function handleBeforeRequest(details) {
-  if (
     details.url.includes("chrome-extension:") ||
     details.url.includes("chrome:") ||
     details.url == "http://178.170.48.29:5000/prediction" ||

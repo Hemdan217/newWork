@@ -44,13 +44,12 @@ chrome.runtime.sendMessage(
       // link.style.backgroundColor = "red";
       createNewDiv();
     }
-    if (!document.baseURI.includes("index.html?checkUrl=")) {
-      await chrome.runtime.sendMessage({
-        action: "changeIconCurrent",
 
-        prediction: res?.predict,
-      });
-    }
+    await chrome.runtime.sendMessage({
+      action: "changeIconCurrent",
+
+      prediction: res?.predict,
+    });
   }
 );
 
