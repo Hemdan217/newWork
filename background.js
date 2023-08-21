@@ -1,6 +1,6 @@
 var token;
 let blockAll = false;
-
+let refresh_token;
 // This event runs when the extension receives a message from the popup
 chrome.runtime.onMessage.addListener(async function (
   request,
@@ -11,33 +11,48 @@ chrome.runtime.onMessage.addListener(async function (
     console.log(request.payload);
 
     token = request.payload;
-    chrome.runtime.sendMessage({ token });
   } else if (request.action == "checkThisUrl") {
-    console.log(request.action);
-    fetch("http://178.170.48.29:5000/prediction", {
+    fetch("http://178.170.48.29:5000/refresh", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token,
       },
-      body: JSON.stringify({
-        url: request.payload,
-      }),
     })
       .then(function (res) {
         console.log(request.payload);
         return res.json();
       })
       .then(function (data) {
-        console.log(data);
-        chrome.tabs.query(
-          { active: true, currentWindow: true },
-          function (tabs) {
-            changeIcon(data.predict, tabs[0].id);
-          }
-        );
+        fetch("http://178.170.48.29:5000/prediction", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + data.access_token,
+          },
+          body: JSON.stringify({
+            url: request.payload,
+          }),
+        })
+          .then(function (res) {
+            console.log(request.payload);
+            return res.json();
+          })
+          .then(function (data) {
+            console.log(data);
+            chrome.tabs.query(
+              { active: true, currentWindow: true },
+              function (tabs) {
+                changeIcon(data.predict, tabs[0].id);
+              }
+            );
 
-        sendResponse(data);
+            sendResponse(data);
+          })
+          .catch(function (err) {
+            console.log(err);
+            sendResponse({ error: "An error occurred" });
+          });
       })
       .catch(function (err) {
         console.log(err);
@@ -53,31 +68,39 @@ chrome.runtime.onMessage.addListener(async function (
       changeIcon(request.prediction, tabs[0].id);
     });
   } else if (request.action == "checkThisUrl2") {
-    console.log(request.action);
-    fetch("http://178.170.48.29:5000/prediction", {
+    fetch("http://178.170.48.29:5000/refresh", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token,
       },
-      body: JSON.stringify({
-        url: request.payload,
-      }),
     })
       .then(function (res) {
         console.log(request.payload);
         return res.json();
       })
       .then(function (data) {
-        console.log(data);
-        // chrome.tabs.query(
-        //   { active: true, currentWindow: true },
-        //   function (tabs) {
-        //     changeIcon(data.predict, tabs[0].id);
-        //   }
-        // );
-
-        sendResponse(data);
+        fetch("http://178.170.48.29:5000/prediction", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + data.access_token,
+          },
+          body: JSON.stringify({
+            url: request.payload,
+          }),
+        })
+          .then(function (res) {
+            console.log(request.payload);
+            return res.json();
+          })
+          .then(function (data) {
+            sendResponse(data);
+          })
+          .catch(function (err) {
+            console.log(err);
+            sendResponse({ error: "An error occurred" });
+          });
       })
       .catch(function (err) {
         console.log(err);
@@ -118,7 +141,8 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
     details.frameId == 0 &&
     !(
       details.url.includes("chrome-extension:") ||
-      details.url.includes("chrome:")
+      details.url.includes("chrome:") ||
+      details.url.includes("about:blank?checking")
     )
   ) {
     if (details.url.includes("?checked")) {
@@ -129,65 +153,93 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
       tabId = details.tabId;
 
       chrome.tabs.update(details.tabId, {
-        url: `index.html`,
+        url: `about:blank?checking`,
       });
     }
-  }
-});
-
-function handleBeforeRequest(details) {
-  console.log(details.url);
-  if (
-    details.url.includes(`chrome-extension://${chrome.runtime.id}/index.html`)
+  } else if (
+    details.frameId == 0 &&
+    details.url.includes(`about:blank?checking`)
   ) {
-    fetch("http://178.170.48.29:5000/prediction", {
+    fetch("http://178.170.48.29:5000/refresh", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token,
       },
-      body: JSON.stringify({
-        url: originalUrl,
-      }),
     })
-      .then((response) => {
-        // Check if the response was successful
-        if (response.ok) {
-          response.json().then((data) => {
-            changeIcon(data?.predict, details.tabId);
-            chrome.tabs.sendMessage(details.tabId, {
-              prediction: data?.predict,
-              id: details.tabId,
-            });
-            if (data?.predict == "NORMAL") {
-              chrome.tabs.update(details.tabId, {
-                url: `${originalUrl}?checked`,
-              });
-              changeIcon(data?.predict, details.tabId);
-            } else if (data?.predict == "MALICIOUS") {
-              chrome.tabs.sendMessage(details.tabId, {
-                prediction: data?.predict,
-                id: details.tabId,
-              });
-            }
-          });
-        } else {
-          chrome.tabs.update(details.tabId, { url: "error.html" });
-        }
+      .then(function (res) {
+        return res.json();
       })
-      .catch((error) => {
-        // Handle any errors that occur during the request
-        // Cancel the navigation
-        chrome.tabs.update(details.tabId, { url: "error.html" });
+      .then(function (data) {
+        fetch("http://178.170.48.29:5000/prediction", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + data.access_token,
+          },
+          body: JSON.stringify({
+            url: originalUrl,
+          }),
+        })
+          .then((response) => {
+            // Check if the response was successful
+            if (response.ok) {
+              response.json().then((data) => {
+                changeIcon(data?.predict, details.tabId);
+
+                if (data?.predict == "NORMAL") {
+                  chrome.tabs.sendMessage(details.tabId, {
+                    prediction: data?.predict,
+                    id: details.tabId,
+                  });
+                  chrome.tabs.update(details.tabId, {
+                    url: `${originalUrl}?checked`,
+                  });
+                  changeIcon(data?.predict, details.tabId);
+                } else if (data?.predict == "MALICIOUS") {
+                  chrome.tabs.update(details.tabId, {
+                    url: `index.html`,
+                  });
+                  // chrome.tabs.sendMessage(details.tabId, {
+                  //   prediction: data?.predict,
+                  //   id: details.tabId,
+                  // });
+                  changeIcon(data?.predict, details.tabId);
+                }
+              });
+            } else {
+              chrome.tabs.update(details.tabId, { url: "error.html" });
+            }
+          })
+          .catch((error) => {
+            // Handle any errors that occur during the request
+            // Cancel the navigation
+            chrome.tabs.update(details.tabId, { url: "error.html" });
+          });
+      })
+      .catch(function (err) {
+        console.log(err);
       });
-  } else if (details.url.includes("?checked")) {
+  }
+});
+
+function handleBeforeRequest(details) {
+  console.log(details.url);
+  if (details.url.includes("?checked")) {
     const redirectUrl = details.url.replace(/\?checked\b/, "");
     return { redirectUrl };
+  } else if (details.url.includes(`${chrome.runtime.id}/index.html`)) {
+    setTimeout(() => {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        changeIcon("MALICIOUS", tabs[0].id);
+      });
+    }, 300);
   } else if (
     details.url.includes("chrome-extension:") ||
     details.url.includes("chrome:") ||
     details.url == "http://178.170.48.29:5000/prediction" ||
-    details.url == "http://178.170.48.29:5000/authenticate" ||
+    details.url == "http://178.170.48.29:5000/refresh" ||
+    details.url == "http://178.170.48.29:5000/token" ||
     details.url == "ws://localhost:1815/"
   ) {
     return { cancel: false };
@@ -223,7 +275,8 @@ function blockRequests(details) {
     details.url.includes("chrome-extension:") ||
     details.url.includes("chrome:") ||
     details.url == "http://178.170.48.29:5000/prediction" ||
-    details.url == "http://178.170.48.29:5000/authenticate" ||
+    details.url == "http://178.170.48.29:5000/refresh" ||
+    details.url == "http://178.170.48.29:5000/token" ||
     details.url == "ws://localhost:1815/"
   ) {
     return { cancel: false };
@@ -255,6 +308,26 @@ function changeIcon(prediction, currentTab) {
       },
     });
   } else if (prediction == "MALICIOUS") {
+    const code = `
+                            var div = document.createElement("div");
+                            div.style.backgroundColor = "red";
+                            div.style.padding = "20px";
+                            div.style.position = "fixed";
+                            div.style.top = "0";
+                            div.style.margin = "auto";
+                            div.style.direction = "ltr";
+                            div.style.zIndex = "1000";
+                            div.style.width = "100%";
+                            div.style.color = "white";
+                            div.style.textAlign = "center";
+                            div.style.fontWeight = "bold";
+                            div.innerHTML = "WARNING - Potential Malicious page!";
+
+                            document.body.appendChild(div);
+                          `;
+
+    // Execute the code in the specific tab
+
     chrome.browserAction.setIcon({
       tabId: currentTab,
       path: {

@@ -31,16 +31,16 @@ function IndexPopup() {
     //       setAuth(true);
     //     } else {
     axios
-      .post("http://178.170.48.29:5000/authenticate", {
+      .post("http://178.170.48.29:5000/token", {
         clientId: "YjY1YTFiODQtMjVlOC00N2FmLWFmMWYtZjUxZjA0MjMwZjYx",
         key: "ZjgxZTc3OTktN2MyNy00ZjEyLWFkNzQtNDVjNzc0OTQxN2I1",
       })
       .then((res) => {
         console.log(res.data);
         console.log(res.data);
-        setToken(res.data.access_token);
+        setToken(res.data.refresh_token);
         setAuth(true);
-        start(res.data.access_token);
+        start(res.data.refresh_token);
       });
     //   }
     // } else {
@@ -65,10 +65,10 @@ function IndexPopup() {
   //   }
   // }, [auth]);
 
-  async function start(token) {
+  async function start(refresh_token) {
     await chrome.runtime.sendMessage({
       action: "start",
-      payload: token,
+      payload: refresh_token,
     });
   }
 
@@ -79,7 +79,7 @@ function IndexPopup() {
       key: key?.current?.value,
     });
     console.log(res.data);
-    setToken(res.data.access_token);
+    setToken(res.data.refresh_token);
     setAuth(true);
   };
   return (

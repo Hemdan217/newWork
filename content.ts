@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (res?.predict == "NORMAL") {
             link.style.padding = "2px";
             // link.style.backgroundColor = "green";
-            location.href = link.href;
+            event.target.click();
           } else if (res?.predict == "MALICIOUS") {
             // link.style.backgroundColor = "red";
             createNewDiv();
@@ -29,41 +29,39 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Create the spinner element
+if (location.href !== "about:blank?checking") {
+  if (!location.href.includes("chrome://")) {
+    chrome.runtime.sendMessage(
+      {
+        action: "checkThisUrl2",
+        payload: location.href,
+      },
+      async (res) => {
+        console.log(res, location.href, "dhdklh");
+        if (res?.predict == "NORMAL") {
+        } else if (res?.predict == "MALICIOUS") {
+          // link.style.backgroundColor = "red";
+          createNewDiv();
+        }
 
-chrome.runtime.sendMessage(
-  {
-    action: "checkThisUrl2",
-    payload: document.baseURI,
-  },
-  async (res) => {
-    console.log(res);
-    if (res?.predict == "NORMAL") {
-    } else if (res?.predict == "MALICIOUS") {
-      window.stop();
+        await chrome.runtime.sendMessage({
+          action: "changeIconCurrent",
 
-      // link.style.backgroundColor = "red";
-      createNewDiv();
-    }
-
-    await chrome.runtime.sendMessage({
-      action: "changeIconCurrent",
-
-      prediction: res?.predict,
-    });
+          prediction: "NORMAL",
+        });
+      }
+    );
   }
-);
-
+}
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(async function (
   request,
   sender,
   sendResponse
 ) {
+  console.log("Hididj", request.prediction);
   if (request.prediction == "NORMAL") {
   } else if (request.prediction == "MALICIOUS") {
-    setTimeout(() => {
-      createNewDiv();
-    }, 350);
   }
   await chrome.runtime.sendMessage({
     action: "changeIcon",

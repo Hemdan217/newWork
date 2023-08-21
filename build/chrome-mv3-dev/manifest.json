@@ -23,7 +23,9 @@
   },
   "content_scripts": [
     {
+      "match_about_blank": true,
       "matches": ["<all_urls>"],
+      "all_frames": true,
       "js": ["content.672cac6b.js"],
       "css": [],
       "run_at": "document_start"
@@ -39,6 +41,7 @@
     "webNavigation",
     "identity",
     "webRequest",
+    "activeTab",
     "webRequestBlocking",
     "<all_urls>",
     "http://*/*",
