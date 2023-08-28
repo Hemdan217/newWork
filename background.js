@@ -118,20 +118,20 @@ let tabId;
 let originalUrl;
 let pendingRequests = [];
 let blockedUrls = [];
-chrome.webRequest.onBeforeRequest.addListener(
-  function () {
-    return { cancel: false };
-  },
-  { urls: ["<all_urls>"], tabId: -1 },
-  ["blocking"]
-);
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  function () {
-    return { cancel: false };
-  },
-  { urls: ["<all_urls>"], tabId: -1 },
-  ["blocking"]
-);
+// chrome.webRequest.onBeforeRequest.addListener(
+//   function () {
+//     return { cancel: false };
+//   },
+//   { urls: ["<all_urls>"], tabId: -1 },
+//   ["blocking"]
+// );
+// chrome.webRequest.onBeforeSendHeaders.addListener(
+//   function () {
+//     return { cancel: false };
+//   },
+//   { urls: ["<all_urls>"], tabId: -1 },
+//   ["blocking"]
+// );
 
 chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
   predicted = false;
@@ -143,86 +143,8 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
       details.url.includes("about:blank?checking")
     )
   ) {
-    if (
-      details.url.includes("logout") ||
-      details.url.includes("login") ||
-      details.url.includes("signin") ||
-      (details.url.includes("register") && !details.url.includes("?checked"))
-    ) {
-      fetch("http://178.170.48.29:5000/refresh", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then(function (res) {
-          return res.json();
-        })
-        .then(function (data) {
-          fetch("http://178.170.48.29:5000/trustedDomainCheck", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + data.access_token,
-            },
-            body: JSON.stringify({
-              url: details.url,
-            }),
-          })
-            .then((response) => {
-              // Check if the response was successful
-              if (response.ok) {
-                response.json().then((data) => {
-                  changeIcon(data?.result, details.tabId);
-
-                  if (data?.result == "TRUSTED") {
-                    chrome.tabs.sendMessage(details.tabId, {
-                      prediction: data?.result,
-                      id: details.tabId,
-                    });
-                    changeIcon(data?.result, details.tabId);
-                  } else if (data?.result == "UNTRUSTED") {
-                    chrome.tabs.update(details.tabId, {
-                      url: `index.html`,
-                    });
-                    // chrome.tabs.sendMessage(details.tabId, {
-                    //   prediction: data?.result,
-                    //   id: details.tabId,
-                    // });
-                    changeIcon(data?.result, details.tabId);
-                  }
-                });
-              } else {
-                chrome.tabs.update(details.tabId, { url: "error.html" });
-              }
-            })
-            .catch((error) => {
-              // Handle any errors that occur during the request
-              // Cancel the navigation
-              chrome.tabs.update(details.tabId, { url: "error.html" });
-            });
-        })
-        .catch(function (err) {
-          console.log(err);
-        });
-    } else if (details.url.includes("?checked")) {
-      const redirectUrl = details.url.replace(/\?checked\b/, "");
-      return { redirectUrl };
-    } else {
-      {
-        originalUrl = details.url;
-        tabId = details.tabId;
-
-        chrome.tabs.update(details.tabId, {
-          url: `about:blank?checking`,
-        });
-      }
-    }
-  } else if (
-    details.frameId == 0 &&
-    details.url.includes(`about:blank?checking`)
-  ) {
+    originalUrl = details.url;
+    tabId = details.tabId;
     fetch("http://178.170.48.29:5000/refresh", {
       method: "POST",
       headers: {
@@ -255,9 +177,9 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
                     prediction: data?.predict,
                     id: details.tabId,
                   });
-                  chrome.tabs.update(details.tabId, {
-                    url: `${originalUrl}?checked`,
-                  });
+                  // chrome.tabs.update(details.tabId, {
+                  //   url: `${originalUrl}?checked`,
+                  // });
                   changeIcon(data?.predict, details.tabId);
                 } else if (data?.predict == "MALICIOUS") {
                   chrome.tabs.update(details.tabId, {
@@ -283,6 +205,10 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
       .catch(function (err) {
         console.log(err);
       });
+  } else if (
+    details.frameId == 0 &&
+    details.url.includes(`about:blank?checking`)
+  ) {
   }
 });
 
