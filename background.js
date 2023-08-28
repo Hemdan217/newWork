@@ -134,8 +134,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 );
 
 chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
-  console.log(details.url);
-
   predicted = false;
   if (
     details.frameId == 0 &&
@@ -145,16 +143,81 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
       details.url.includes("about:blank?checking")
     )
   ) {
-    if (details.url.includes("?checked")) {
+    if (
+      details.url.includes("logout") ||
+      details.url.includes("login") ||
+      details.url.includes("signin") ||
+      (details.url.includes("register") && !details.url.includes("?checked"))
+    ) {
+      fetch("http://178.170.48.29:5000/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (data) {
+          fetch("http://178.170.48.29:5000/trustedDomainCheck", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + data.access_token,
+            },
+            body: JSON.stringify({
+              url: details.url,
+            }),
+          })
+            .then((response) => {
+              // Check if the response was successful
+              if (response.ok) {
+                response.json().then((data) => {
+                  changeIcon(data?.result, details.tabId);
+
+                  if (data?.result == "TRUSTED") {
+                    chrome.tabs.sendMessage(details.tabId, {
+                      prediction: data?.result,
+                      id: details.tabId,
+                    });
+                    changeIcon(data?.result, details.tabId);
+                  } else if (data?.result == "UNTRUSTED") {
+                    chrome.tabs.update(details.tabId, {
+                      url: `index.html`,
+                    });
+                    // chrome.tabs.sendMessage(details.tabId, {
+                    //   prediction: data?.result,
+                    //   id: details.tabId,
+                    // });
+                    changeIcon(data?.result, details.tabId);
+                  }
+                });
+              } else {
+                chrome.tabs.update(details.tabId, { url: "error.html" });
+              }
+            })
+            .catch((error) => {
+              // Handle any errors that occur during the request
+              // Cancel the navigation
+              chrome.tabs.update(details.tabId, { url: "error.html" });
+            });
+        })
+        .catch(function (err) {
+          console.log(err);
+        });
+    } else if (details.url.includes("?checked")) {
       const redirectUrl = details.url.replace(/\?checked\b/, "");
       return { redirectUrl };
     } else {
-      originalUrl = details.url;
-      tabId = details.tabId;
+      {
+        originalUrl = details.url;
+        tabId = details.tabId;
 
-      chrome.tabs.update(details.tabId, {
-        url: `about:blank?checking`,
-      });
+        chrome.tabs.update(details.tabId, {
+          url: `about:blank?checking`,
+        });
+      }
     }
   } else if (
     details.frameId == 0 &&
@@ -247,7 +310,7 @@ function handleBeforeRequest(details) {
     return { cancel: false }; // Continue with the request
   } else {
     // Delay the request by 3 seconds
-    var delayInMilliseconds = 500; // 3 seconds
+    var delayInMilliseconds = 250; // 3 seconds
     var startTime = new Date().getTime();
     var endTime = startTime + delayInMilliseconds;
 
@@ -284,7 +347,7 @@ function blockRequests(details) {
     return { cancel: false }; // Continue with the request
   } else {
     // Delay the request by 3 seconds
-    var delayInMilliseconds = 500; // 3 seconds
+    var delayInMilliseconds = 250; // 3 seconds
     var startTime = new Date().getTime();
     var endTime = startTime + delayInMilliseconds;
 
@@ -296,7 +359,7 @@ function blockRequests(details) {
 }
 
 function changeIcon(prediction, currentTab) {
-  if (prediction == "NORMAL") {
+  if (prediction == "NORMAL" || prediction == "TRUSTED") {
     chrome.browserAction.setIcon({
       tabId: currentTab,
       path: {
@@ -307,7 +370,7 @@ function changeIcon(prediction, currentTab) {
         128: "./../../assets/normal/icon128.plasmo.3c1ed2d2.png",
       },
     });
-  } else if (prediction == "MALICIOUS") {
+  } else if (prediction == "NORMAL" || prediction == "UNTRUSTED") {
     const code = `
                             var div = document.createElement("div");
                             div.style.backgroundColor = "red";

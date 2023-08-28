@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (res?.predict == "NORMAL") {
             link.style.padding = "2px";
             // link.style.backgroundColor = "green";
-            event.target.click();
+            location.href = link.href;
           } else if (res?.predict == "MALICIOUS") {
             // link.style.backgroundColor = "red";
             createNewDiv();
